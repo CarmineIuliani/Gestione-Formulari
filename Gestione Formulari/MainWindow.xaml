@@ -75,9 +75,9 @@
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Width="300"
+                        <TextBlock Width="400"
                                Text="{Binding Path=StartFileName}"/>
-                        <TextBox MinWidth="300"
+                        <TextBox MinWidth="400"
                                  Text="{Binding Path=DestFileName}"/>
                     </StackPanel>
                 </DataTemplate>

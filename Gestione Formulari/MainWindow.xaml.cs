@@ -43,7 +43,24 @@ namespace Gestione_Formulari
                 filesList.Add(m);
             }
             lwStart.ItemsSource = filesList;
-
+        }
+        private bool CopiaFile(string start, string dest)
+        {
+            if (System.IO.File.Exists(dest))
+            {
+                MessageBoxResult r = MessageBox.Show("Il file "+ dest +" esiste già.\n\nProseguo con gli altri file?", "ATTENZIONE!", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+                return r == MessageBoxResult.OK;
+            }
+            try
+            {
+                System.IO.File.Copy(start, dest);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Si è verificato un errore durante la copia in " + dest + "\n\nNon posso proseguire.\n\n" + ex.Message, "ERRORE!", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+            return true;
         }
         private void btnStartPath_Click(object sender, RoutedEventArgs e)
         {
@@ -103,14 +120,14 @@ namespace Gestione_Formulari
                     if (destPath1 != "")
                     {
                         dest = destPath1 + f.DestFileName + f.Estensione;
-                        if (!System.IO.File.Exists(dest))
-                            System.IO.File.Copy(start, dest);
+                        if (!CopiaFile(start, dest))
+                            break;
                     }
                     if (destPath2 != "")
                     {
-                        dest = destPath2 = f.DestFileName + f.Estensione;
-                        if (!System.IO.File.Exists(dest))
-                            System.IO.File.Copy(start, dest);
+                        dest = destPath2 + f.DestFileName + f.Estensione;
+                        if (!CopiaFile(start, dest))
+                            break;
                     }
                     bool check = true;
                     while (check)
