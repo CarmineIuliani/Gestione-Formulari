@@ -44,12 +44,22 @@ namespace Gestione_Formulari
             }
             lwStart.ItemsSource = filesList;
         }
-        private bool CopiaFile(string start, string dest)
+        private CopyResult CopiaFile(string start, string dest)
         {
             if (System.IO.File.Exists(dest))
             {
                 MessageBoxResult r = MessageBox.Show("Il file "+ dest +" esiste già.\n\nProseguo con gli altri file?", "ATTENZIONE!", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
-                return r == MessageBoxResult.OK;
+                switch (r)
+                {
+                    case MessageBoxResult.OK:
+                        {
+                            return CopyResult.Continue;
+                        }
+                    case MessageBoxResult.Cancel:
+                        {
+                            return CopyResult.Cancel;
+                        }
+                }
             }
             try
             {
@@ -58,9 +68,9 @@ namespace Gestione_Formulari
             catch (Exception ex)
             {
                 MessageBox.Show("Si è verificato un errore durante la copia in " + dest + "\n\nNon posso proseguire.\n\n" + ex.Message, "ERRORE!", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
+                return CopyResult.Cancel;
             }
-            return true;
+            return CopyResult.OK;
         }
         private void btnStartPath_Click(object sender, RoutedEventArgs e)
         {
@@ -109,26 +119,42 @@ namespace Gestione_Formulari
         private void btnSalva_Click(object sender, RoutedEventArgs e)
         {
             int numFiles = 0;
-            foreach(MyFile f in filesList)
+
+            foreach (MyFile f in filesList)
             {
                 if (f.DestFileName != "")
                 {
-                    numFiles++;
                     string start = startPath + f.StartFileName;
-                    string dest = "";
+                    string dest1 = "";
+                    string dest2 = "";
+                    CopyResult copyResult;
 
+                    //Provo ad effettuare la prima copia
                     if (destPath1 != "")
                     {
-                        dest = destPath1 + f.DestFileName + f.Estensione;
-                        if (!CopiaFile(start, dest))
+                        dest1 = destPath1 + f.DestFileName + f.Estensione;
+                        copyResult = CopiaFile(start, dest1);
+                        if(copyResult == CopyResult.Continue)
+                            continue;
+                        if(copyResult == CopyResult.Cancel)
                             break;
                     }
+                    //Provo ad effettuare la seconda copia
                     if (destPath2 != "")
                     {
-                        dest = destPath2 + f.DestFileName + f.Estensione;
-                        if (!CopiaFile(start, dest))
+                        dest2 = destPath2 + f.DestFileName + f.Estensione;
+                        copyResult = CopiaFile(start, dest2);
+                        if (copyResult != CopyResult.OK)
+                        {
+                            //Se la seconda copia non va a buon fine, elimino il file della prima copia
+                            System.IO.File.Delete(dest1);
+                        }
+                        if (copyResult == CopyResult.Continue)
+                            continue;
+                        if (copyResult == CopyResult.Cancel)
                             break;
                     }
+                    //Cancello il file di origine
                     bool check = true;
                     while (check)
                     {
@@ -145,6 +171,7 @@ namespace Gestione_Formulari
                         }
                     }
                 }
+                numFiles++;
             }
             MessageBox.Show(string.Format("Sono stati copiati {0} file", numFiles.ToString()));
             CaricaLista(startPath);
@@ -166,5 +193,9 @@ namespace Gestione_Formulari
         public string StartFileName { get; set; } = "";
         public string DestFileName { get; set; } = "";
         public string Estensione { get; set; } = "";
+    }
+    public enum CopyResult
+    {
+        OK, Continue, Cancel
     }
 }
