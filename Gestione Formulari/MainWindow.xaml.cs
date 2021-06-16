@@ -119,6 +119,7 @@ namespace Gestione_Formulari
         private void btnSalva_Click(object sender, RoutedEventArgs e)
         {
             int numFiles = 0;
+            List<MyFile> toRemove = new List<MyFile>();
 
             foreach (MyFile f in filesList)
             {
@@ -160,7 +161,10 @@ namespace Gestione_Formulari
                     {
                         try
                         {
+                            //Cancello il file dalla cartella di partenza
                             System.IO.File.Delete(start);
+                            //Aggiungo il file alla lista di quelli da cancellare
+                            toRemove.Add(f);
                             check = false;
                         }
                         catch(Exception ex)
@@ -174,7 +178,12 @@ namespace Gestione_Formulari
                 numFiles++;
             }
             MessageBox.Show(string.Format("Sono stati copiati {0} file", numFiles.ToString()));
-            CaricaLista(startPath);
+            //CaricaLista(startPath);
+            //Rimuovo dalla lista principale quelli che ho effettivamente copiato
+            foreach (MyFile removing in toRemove)
+                filesList.Remove(removing);
+            lwStart.ItemsSource = null;
+            lwStart.ItemsSource = filesList;
         }
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
