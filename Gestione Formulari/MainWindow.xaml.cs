@@ -9,6 +9,9 @@ using iText.Kernel.Pdf;
 using iText.Pdfocr;
 using iText.Pdfocr.Tesseract4;
 using System.Reflection;
+using Microsoft.Win32;
+using iText.Kernel;
+using System.IO;
 
 namespace Gestione_Formulari
 {    public partial class MainWindow : Window
@@ -42,7 +45,7 @@ namespace Gestione_Formulari
             {
                 MyFile m = new MyFile();
                 m.StartFileName = f.Replace(path, "");
-                m.DestFileName = OttieniNomeFile(path);
+                m.DestFileName = OttieniNomeFile(f);
                 int indexDot = f.IndexOf(".");
                 m.Estensione = f.Substring(indexDot, f.Length - indexDot);
                 filesList.Add(m);
@@ -80,17 +83,55 @@ namespace Gestione_Formulari
         private string OttieniNomeFile(string path)
         {
             string res = "";
+            bool success = false;
             List<System.IO.FileInfo> image = new List<System.IO.FileInfo>();
             image.Add(new System.IO.FileInfo(path));
             Tesseract4OcrEngineProperties properties = new Tesseract4OcrEngineProperties();
             //string exePath = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            properties.SetPathToTessData(new System.IO.FileInfo(Environment.SpecialFolder.Desktop.ToString()+"\\tessdata_ita.traineddata"));
+            while (success)
+            {
+                try
+                {
+                    properties.SetPathToTessData(new System.IO.FileInfo(Settings.Default.TessDataPath));
+                    success = true;
+                }
+                catch(Exception ex)
+                {
+                    OpenFileDialog fd = new OpenFileDialog();
+                    fd.Title = "Scegli il file TessData";
+                    fd.Filter = "File TessData|*.traineddata";
+                    fd.Multiselect = false;
+                    fd.ShowDialog();
+                    if (fd.FileName != "")
+                        Settings.Default.TessDataPath = fd.FileName;
+                }
+            }
             Tesseract4LibOcrEngine engine = new Tesseract4LibOcrEngine(properties);
-            System.IO.FileInfo fiTxtFile = new System.IO.FileInfo(System.IO.Path.Combine(Environment.SpecialFolder.LocalApplicationData.ToString(), "tempTxt.txt"));
-            engine.CreateTxtFile(image, fiTxtFile);
-            Console.Write(fiTxtFile);
             
-            
+            PdfDocument pdfDoc = new PdfDocument(new PdfReader(path));
+
+            int numberOfPdfObject = pdfDoc.GetNumberOfPdfObjects();
+            for (int i = 1; i <= numberOfPdfObject; i++)
+            {
+                PdfObject obj = pdfDoc.GetPdfObject(i);
+                if (obj != null && obj.IsStream())
+                {
+                    //todo investiga qui....
+                    //obj.GetObjectType();
+                    byte[] b = ((PdfStream)obj).GetBytes();
+                    if(b!=null)
+                    {
+                        using (FileStream file = new FileStream(string.Format(@"C:\Users\Carmine\Desktop\Monia\new{0}.jpeg",i), FileMode.Create))
+                        {
+                            file.Write(b, 0, b.Length);
+                        }
+                    }
+                }
+            }
+
+            pdfDoc.Close();
+
+
             return res;
         }
         private void btnStartPath_Click(object sender, RoutedEventArgs e)

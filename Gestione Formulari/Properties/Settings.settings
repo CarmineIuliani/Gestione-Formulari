@@ -17,5 +17,8 @@
     <Setting Name="FormWidth" Type="System.Double" Scope="User">
       <Value Profile="(Default)">800</Value>
     </Setting>
+    <Setting Name="TessDataPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\Users\Carmine\Desktop\tessdata_ita.traineddata</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
